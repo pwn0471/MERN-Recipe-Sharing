@@ -1,0 +1,136 @@
+/* RESET */
+* {
+  box-sizing: border-box;
+}
+
+/* PAGE */
+.home {
+  min-height: calc(100vh - 56px);
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 80px 60px;
+}
+
+/* HERO CONTAINER */
+.hero {
+  width: 100%;
+  max-width: 1300px;
+
+  display: flex;
+  flex-direction: row;        /* FORCE LEFT–RIGHT */
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 80px;
+  flex-wrap: nowrap;          /* 🔴 THIS FIXES YOUR ISSUE */
+}
+
+/* LEFT TEXT */
+.hero-text {
+  flex: 1;
+  position: relative;
+  padding-left: 28px;
+  animation: slideInLeft 1s ease forwards;
+}
+
+.hero-text::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 6px;
+  height: 92%;
+  background: #ff6b4a;
+  border-radius: 4px;
+}
+
+.hero-text h1 {
+  font-size: 48px;
+  font-weight: 800;
+  color: #1f1f1f;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+
+.hero-text p {
+  font-size: 18px;
+  color: #666;
+  max-width: 420px;
+}
+
+/* RIGHT IMAGE */
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  animation: fadeIn 1.2s ease forwards;
+}
+
+.hero-image img {
+  max-width: 680px;
+  width: 100%;
+  animation:
+    float 4s ease-in-out infinite,
+    parallax 10s ease-in-out infinite alternate;
+}
+
+/* ===== ANIMATIONS (UNCHANGED) ===== */
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes parallax {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-30px) scale(1.04); }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+  .home {
+    padding: 40px 20px;
+  }
+
+  .hero {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-text {
+    padding-left: 0;
+  }
+
+  .hero-text::before {
+    display: none;
+  }
+
+  .hero-image img {
+    max-width: 420px;
+  }
+}
