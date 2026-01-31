@@ -1,77 +1,126 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import API from "../services/api";
 
 const FoodCard = ({ recipe }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Handle card click (open recipe)
-  const handleOpenRecipe = (e) => {
-    if (!token) {
-      e.preventDefault();
-      navigate("/login");
-    }
-  };
+  // MongoDB recipe check
+  const isDBRecipe = !!recipe._id;
 
-  // Handle like / favorite
-  const handleLike = (e) => {
-    e.preventDefault(); // prevent navigation
-    e.stopPropagation();
+  const [liked, setLiked] = useState(false);
 
+  // 🔁 Check if recipe is already in favorites (ONLY for DB recipes)
+  useEffect(() => {
+    const checkLiked = async () => {
+      if (!token || !isDBRecipe) return;
+
+      try {
+        const res = await API.get("/auth/profile");
+        const favorites = res.data.favorites || [];
+        setLiked(favorites.includes(recipe._id));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    checkLiked();
+  }, [recipe._id, token, isDBRecipe]);
+
+  // ⭐ CARD CLICK → open recipe page
+  const handleCardClick = () => {
     if (!token) {
-      navigate("/login");
+      toast.error("Please login first 🔒");
+      setTimeout(() => navigate("/login"), 800);
       return;
     }
 
-    // TODO: API call (later)
-    console.log("Liked recipe:", recipe.id);
+    // MongoDB recipe
+    if (isDBRecipe) {
+      navigate(`/recipe/${recipe._id}`);
+      return;
+    }
+
+    // Spoonacular recipe
+    if (recipe.id) {
+      navigate(`/recipe/${recipe.id}`);
+      return;
+    }
+
+    toast.error("Invalid recipe");
   };
 
-  // Image fallback
+  // ❤️ LIKE / UNLIKE → ONLY MongoDB recipes
+  const handleLike = async (e) => {
+    e.stopPropagation();
+
+    if (!token) {
+      toast.error("Please login first 🔒");
+      setTimeout(() => navigate("/login"), 800);
+      return;
+    }
+
+    if (!isDBRecipe) {
+      toast.error("Only your added recipes can be favorited ❤️");
+      return;
+    }
+
+    try {
+      await API.put(`/recipes/favorite/${recipe._id}`);
+      setLiked((prev) => !prev);
+
+      toast.success(
+        liked ? "Removed from favorites ❌" : "Added to favorites ❤️"
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update favorite");
+    }
+  };
+
   const imageUrl =
+    recipe.imageUrl ||
     recipe.image ||
     "https://via.placeholder.com/400x250?text=No+Image";
 
   return (
-    <Link to={`/recipe/${recipe.id}`} onClick={handleOpenRecipe}>
-      <div className="relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition duration-300 cursor-pointer">
+    <div
+      onClick={handleCardClick}
+      className="relative cursor-pointer bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition duration-300"
+    >
+      {/* ❤️ LIKE BUTTON */}
+      {/* <button
+        disabled={!isDBRecipe}
+        onClick={handleLike}
+        className={`absolute top-3 right-3 z-10 p-2 rounded-full shadow transition
+          ${
+            isDBRecipe
+              ? "bg-white/90 hover:scale-110"
+              : "bg-gray-200 cursor-not-allowed"
+          }
+        `}
+      >
+        <span className={liked ? "text-red-500" : "text-gray-400"}>
+          {liked ? "❤️" : "🤍"}
+        </span>
+      </button> */}
 
-        {/* ❤️ Like Button */}
-        <button
-          onClick={handleLike}
-          className="absolute top-3 right-3 z-10 bg-white/90 p-2 rounded-full shadow hover:scale-110 transition"
-        >
-          🤍
-        </button>
+      {/* IMAGE */}
+      <img
+        src={imageUrl}
+        alt={recipe.title}
+        className="h-48 w-full object-cover"
+      />
 
-        {/* Image */}
-        <img
-          src={imageUrl}
-          alt={recipe.title}
-          className="h-48 w-full object-cover"
-        />
-
-        {/* Cooking Time */}
-        {recipe.readyInMinutes && (
-          <div className="absolute top-3 left-3 bg-black/70 text-white text-sm px-3 py-1 rounded-full flex items-center gap-1">
-            ⏱ {recipe.readyInMinutes} min
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-800 line-clamp-2">
-            {recipe.title}
-          </h3>
-
-          {/* Optional source */}
-          {recipe.sourceName && (
-            <p className="text-sm text-gray-500 mt-1">
-              From {recipe.sourceName}
-            </p>
-          )}
-        </div>
+      {/* TITLE */}
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-800 line-clamp-2">
+          {recipe.title}
+        </h3>
       </div>
-    </Link>
+    </div>
   );
 };
 

@@ -1,12 +1,10 @@
-import { Navigate, useLocation } from "react-router-dom";
-import toast from "react-hot-toast";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const token = localStorage.getItem("token");
   const location = useLocation();
 
   if (!token) {
-    toast.error("Please login first 🔒");
     return (
       <Navigate
         to="/login"
@@ -16,7 +14,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  return children;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

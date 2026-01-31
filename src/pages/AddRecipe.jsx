@@ -1,32 +1,77 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import API from "../services/api";
+import toast from "react-hot-toast";
+import API from "../services/api";
 
 const AddRecipe = () => {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [ingredients, setIngredients] = useState("");
-  const [steps, setSteps] = useState("");
+  const [instruction, setInstruction] = useState("");
+  const [ingredients, setIngredients] = useState([
+    { name: "", quantity: "" },
+  ]);
+  const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  const handleIngredientChange = (index, field, value) => {
+    const updated = [...ingredients];
+    updated[index][field] = value;
+    setIngredients(updated);
+  };
+
+  const addIngredient = () => {
+    setIngredients([...ingredients, { name: "", quantity: "" }]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+
+    // ✅ basic validation
+    if (!title || !instruction) {
+      return toast.error("Title and instruction required");
+    }
+
+    const filteredIngredients = ingredients.filter(
+      (ing) => ing.name && ing.quantity
+    );
+
+    if (filteredIngredients.length === 0) {
+      return toast.error("Add at least one ingredient");
+    }
 
     try {
-      // await API.post("/recipes", {
-      //   title,
-      //   description,
-      //   ingredients,
-      //   steps,
-      // });
+      setLoading(true);
+
+      // 🔑 GET TOKEN
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login again");
+        return;
+      }
+
+      await API.post(
+        "/recipes", // ✅ CORRECT ROUTE
+        {
+          title,
+          instruction,
+          ingredients: filteredIngredients,
+          imageUrl,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ REQUIRED
+          },
+        }
+      );
+
+      toast.success("Recipe added successfully 🎉");
       navigate("/");
-    } catch (err) {
-      setError("Failed to add recipe. Please try again.");
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to add recipe"
+      );
     } finally {
       setLoading(false);
     }
@@ -36,111 +81,74 @@ const AddRecipe = () => {
     <div className="min-h-[90vh] flex items-center justify-center bg-gradient-to-br from-[#fff3ee] to-white px-4">
       <form
         onSubmit={handleSubmit}
-        className="
-          w-full max-w-[520px]
-          rounded-2xl
-          bg-white/85 backdrop-blur-lg
-          p-10
-          shadow-[0_30px_70px_rgba(0,0,0,0.12)]
-        "
+        className="w-full max-w-[500px] bg-white p-8 rounded-xl shadow"
       >
-        <h2 className="mb-1 text-center text-2xl font-bold text-[#ff6b4a]">
-          Add New Recipe 🍳
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Add New Recipe
         </h2>
 
-        <p className="mb-6 text-center text-sm text-gray-600">
-          Share your delicious recipe with the community
-        </p>
-
-        {error && (
-          <div className="mb-4 rounded-md bg-[#ffe3de] px-3 py-2 text-sm text-[#c0392b]">
-            {error}
-          </div>
-        )}
-
-        {/* Title */}
         <input
           type="text"
-          placeholder="Recipe Title"
+          placeholder="Recipe title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
-          className="
-            mb-4 w-full
-            rounded-lg border border-gray-300
-            px-4 py-2.5 text-sm
-            outline-none
-            focus:border-[#ff6b4a]
-          "
+          className="w-full mb-3 p-2 border rounded"
         />
 
-        {/* Description */}
         <textarea
-          placeholder="Short description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={2}
-          className="
-            mb-4 w-full
-            resize-none
-            rounded-lg border border-gray-300
-            px-4 py-2.5 text-sm
-            outline-none
-            focus:border-[#ff6b4a]
-          "
+          placeholder="Instructions"
+          value={instruction}
+          onChange={(e) => setInstruction(e.target.value)}
+          className="w-full mb-3 p-2 border rounded"
         />
 
-        {/* Ingredients */}
-        <textarea
-          placeholder="Ingredients (comma separated)"
-          value={ingredients}
-          onChange={(e) => setIngredients(e.target.value)}
-          rows={3}
-          required
-          className="
-            mb-4 w-full
-            resize-none
-            rounded-lg border border-gray-300
-            px-4 py-2.5 text-sm
-            outline-none
-            focus:border-[#ff6b4a]
-          "
+        <h4 className="font-semibold mb-2">Ingredients</h4>
+
+        {ingredients.map((ing, index) => (
+          <div key={index} className="flex gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="Name"
+              value={ing.name}
+              onChange={(e) =>
+                handleIngredientChange(index, "name", e.target.value)
+              }
+              className="flex-1 p-2 border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Quantity"
+              value={ing.quantity}
+              onChange={(e) =>
+                handleIngredientChange(index, "quantity", e.target.value)
+              }
+              className="w-28 p-2 border rounded"
+            />
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={addIngredient}
+          className="text-sm text-orange-500 mb-3"
+        >
+          + Add Ingredient
+        </button>
+
+        <input
+          type="text"
+          placeholder="Image URL (optional)"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          className="w-full mb-4 p-2 border rounded"
         />
 
-        {/* Steps */}
-        <textarea
-          placeholder="Steps to prepare the recipe"
-          value={steps}
-          onChange={(e) => setSteps(e.target.value)}
-          rows={4}
-          required
-          className="
-            mb-6 w-full
-            resize-none
-            rounded-lg border border-gray-300
-            px-4 py-2.5 text-sm
-            outline-none
-            focus:border-[#ff6b4a]
-          "
-        />
-
-        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className="
-            w-full
-            rounded-xl
-            bg-[#ff6b4a]
-            py-3
-            text-white
-            font-semibold
-            transition-all duration-300
-            hover:bg-[#ff5430]
-            disabled:opacity-60
-          "
+          className="w-full bg-orange-500 text-white py-2 rounded"
         >
-          {loading ? "Publishing recipe..." : "Add Recipe"}
+          {loading ? "Adding..." : "Add Recipe"}
         </button>
       </form>
     </div>

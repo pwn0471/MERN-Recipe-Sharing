@@ -9,7 +9,7 @@ const Footer = () => {
         <div>
           <h1 className="text-3xl font-extrabold text-orange-500">
             <span className="text-orange">Recipe</span>
-            <span className="text-[#4ade80]">Room</span>
+            <span className="text-[#4ade80]">Hub</span>
           </h1>
           <p className="text-gray-600 mt-1">
             Discover. Cook. Enjoy.

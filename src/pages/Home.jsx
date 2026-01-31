@@ -1,6 +1,7 @@
 import homeimg from "../assets/homeimg.png";
 import MealType from "../components/MealType";
 import PopularFoods from "../components/PopularFoods";
+import MyRecipes from "./MyRecipes";
 
 const Home = () => {
   return (
@@ -61,6 +62,7 @@ const Home = () => {
       {/* MEAL TYPE SECTION (NEW) */}
       <MealType />
       <PopularFoods />
+      <MyRecipes/>
     </>
   );
 };

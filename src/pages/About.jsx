@@ -8,7 +8,7 @@ const About = () => {
         {/* Title */}
         <h1 className="text-5xl font-extrabold text-orange-500 text-center">
             <span className="text-orange">Recipe</span>
-            <span className="text-[#4ade80]">Room</span>
+            <span className="text-[#4ade80]">Hub</span>
           </h1>
 
         {/* Slogan */}

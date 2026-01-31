@@ -1,8 +1,29 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+
+  // 🔍 SEARCH HANDLER (PUBLIC)
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    const value = searchTerm.trim();
+
+    if (!value) {
+      toast.error("Please enter something to search 🔍");
+      return;
+    }
+
+    navigate(`/search/${value}/all`);
+    setSearchTerm("");
+    setOpen(false); // close mobile drawer if open
+  };
 
   return (
     <>
@@ -10,23 +31,31 @@ export default function Navbar() {
       <header className="sticky top-0 z-[1000] w-full bg-gradient-to-r from-[#ff5f4a] to-[#ff845e]">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-5 py-3">
 
-          {/* TEXT LOGO */}
+          {/* LOGO */}
           <Link to="/" className="text-2xl font-extrabold tracking-wide">
             <span className="text-white">Recipe</span>
-            <span className="text-[#4ade80]">Room</span>
+            <span className="text-[#4ade80]">Hub</span>
           </Link>
 
-          {/* SEARCH BAR (DESKTOP) */}
-          <div className="relative hidden flex-1 max-w-[420px] md:block">
+          {/* 🔍 DESKTOP SEARCH */}
+          <form
+            onSubmit={handleSearch}
+            className="relative hidden flex-1 max-w-[420px] md:block"
+          >
             <input
               type="text"
               placeholder="What are you craving today?"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-full px-4 py-3 pr-11 text-sm outline-none shadow-lg"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-600 cursor-pointer">
+            <button
+              type="submit"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-gray-600"
+            >
               🔍
-            </span>
-          </div>
+            </button>
+          </form>
 
           {/* HAMBURGER */}
           <button
@@ -37,35 +66,53 @@ export default function Navbar() {
             ☰
           </button>
 
-          {/* DESKTOP LINKS */}
+          {/* DESKTOP NAV */}
           <nav className="hidden items-center gap-6 md:flex">
-            {["Home", "About", "Create"].map((item) => (
-              <Link
-                key={item}
-                to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-                className="relative font-medium text-white after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all hover:after:w-full"
-              >
-                {item}
-              </Link>
-            ))}
+            <Link to="/" className="nav-link">Home</Link>
+            <Link to="/about" className="nav-link">About</Link>
 
-            <Link
-              to="/login"
-              className="rounded-full bg-white px-5 py-2 font-semibold text-[#ff5f4a] transition hover:bg-[#ffe7e1]"
-            >
-              Login
-            </Link>
+             {token && (
+               <Link to="/favorites" className="nav-link">
+                 Favorites 
+                </Link>
+              )}
+
+
+            {token && (
+              <Link to="/add-recipe" className="nav-link">
+                Create
+              </Link>
+            )}
+
+            {!token ? (
+              <Link
+                to="/login"
+                className="rounded-full bg-white px-5 py-2 font-semibold text-[#ff5f4a]"
+              >
+                Login
+              </Link>
+            ) : (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  toast.success("Logged out 👋");
+                  navigate("/login");
+                }}
+                className="rounded-full bg-white px-5 py-2 font-semibold text-[#ff5f4a]"
+              >
+                Logout
+              </button>
+            )}
           </nav>
         </div>
       </header>
 
-      {/* MOBILE DRAWER */}
+      {/* 📱 MOBILE DRAWER */}
       <aside
         className={`fixed top-0 right-0 z-[1001] h-screen w-[260px] bg-white
         transform transition-transform duration-300
         ${open ? "translate-x-0" : "translate-x-full"}`}
       >
-        {/* Close button */}
         <button
           onClick={() => setOpen(false)}
           className="absolute right-4 top-4 text-2xl"
@@ -75,37 +122,31 @@ export default function Navbar() {
 
         <div className="flex flex-col gap-6 px-6 pt-20">
 
-          {/* MOBILE SEARCH */}
-          <div className="relative">
+          {/* 🔍 MOBILE SEARCH */}
+          <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
               placeholder="Search recipes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-full border px-4 py-3 pr-10 text-sm outline-none"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2">
-              🔍
-            </span>
-          </div>
-
-          {/* LINKS */}
-          {["Home", "About", "Create"].map((item) => (
-            <Link
-              key={item}
-              to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-              onClick={() => setOpen(false)}
-              className="text-lg font-medium text-gray-800"
+            <button
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2"
             >
-              {item}
-            </Link>
-          ))}
+              🔍
+            </button>
+          </form>
 
-          <Link
-            to="/login"
-            onClick={() => setOpen(false)}
-            className="rounded-full bg-[#ff5f4a] px-5 py-3 text-center font-semibold text-white"
-          >
-            Login
-          </Link>
+          <Link to="/" onClick={() => setOpen(false)}>Home</Link>
+          <Link to="/about" onClick={() => setOpen(false)}>About</Link>
+
+          {token && (
+            <Link to="/add-recipe" onClick={() => setOpen(false)}>
+              Create
+            </Link>
+          )}
         </div>
       </aside>
 

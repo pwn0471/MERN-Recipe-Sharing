@@ -1,9 +1,14 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-// import API from "../services/api";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
+import API from "../services/api";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 🔁 redirect back to protected page after login
+  const from = location.state?.from?.pathname || "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,11 +21,28 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // const res = await API.post("/auth/login", { email, password });
-      // localStorage.setItem("token", res.data.token);
-      navigate("/");
+      // ✅ BACKEND LOGIN
+      const res = await API.post("/auth/login", {
+        email,
+        password,
+      });
+
+      // ✅ SAVE TOKEN
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+
+      // ✅ SAVE USER (THIS WAS MISSING ❌)
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      toast.success("Login successful 🎉");
+
+      // redirect to previous protected page
+      navigate(from, { replace: true });
+
     } catch (err) {
       setError("Invalid email or password");
+      toast.error("Invalid email or password");
     } finally {
       setLoading(false);
     }

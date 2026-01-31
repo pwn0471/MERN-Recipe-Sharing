@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-// import API from "../services/api";
+import toast from "react-hot-toast";
+import API from "../services/api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -13,14 +14,28 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
+
     setError("");
     setLoading(true);
 
     try {
-      // await API.post("/auth/register", { name, email, password });
+      await API.post("/auth/register", {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+
+      toast.success("Registration successful 🎉");
       navigate("/login");
     } catch (err) {
-      setError("User already exists or invalid data");
+      const message =
+        err.response?.data?.message ||
+        "User already exists or invalid data";
+
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
